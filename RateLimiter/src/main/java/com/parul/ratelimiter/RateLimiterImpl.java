@@ -1,6 +1,8 @@
 package com.parul.ratelimiter;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /* This is the implementation of RateLimiter.
 *  It stores the requests for each user in a queue and maintains a map userRequestsMap.
@@ -11,9 +13,10 @@ import java.util.*;
 * */
 public class RateLimiterImpl implements RateLimiter {
 
-    int requests;
-    CustomTimeUnit unit;
-    Map<Integer, Queue<Date>> userRequestsMap = new HashMap<Integer, Queue<Date>>();
+    private int requests;
+    private CustomTimeUnit unit;
+    private Map<Integer, Queue<Date>> userRequestsMap = new HashMap<Integer, Queue<Date>>();
+    private static final Logger logger = Logger.getLogger(RateLimiterImpl.class.getName());
 
     public RateLimiterImpl(int requests, CustomTimeUnit unit) {
         this.requests = requests;
@@ -30,7 +33,7 @@ public class RateLimiterImpl implements RateLimiter {
     *  After that if queue is empty or has size less than requests , latest request time will be entered to the queue.
     *  If queue is full then request will not be fulfilled.
     * * */
-    public boolean isRequestAllowed(User user) {
+    public boolean isRequestAllowed(User user) throws RateLimiterException{
         Date currentTime =  new Date();
         Integer userId = user.getUserId();
         Queue<Date> requestQueue = userRequestsMap.get(userId);
@@ -42,9 +45,11 @@ public class RateLimiterImpl implements RateLimiter {
         }
         if(requestQueue.size() < requests) {
             requestQueue.add(currentTime);
+            logger.log(Level.INFO,"Request for the user " + userId + " has been added to queue");
             return true;
         } else {
-            throw new Exception(Status)
+            logger.log(Level.WARNING,"Rate limit has reached");
+            throw new RateLimiterException("Maximum limit to request has been reached");
         }
     }
 
